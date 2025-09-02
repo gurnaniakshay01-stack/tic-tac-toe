@@ -36,15 +36,81 @@
             justify-content: center;
             font-size: 2.5rem;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
         }
         .cell:hover {
             background: #e0e7ff;
+            transform: scale(1.07);
+            box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+        }
+        .cell.filled {
+            animation: popIn 0.3s cubic-bezier(.68,-0.55,.27,1.55);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        .cell.x {
+            color: #6366f1;
+            text-shadow: 0 2px 8px #6366f133;
+        }
+        .cell.o {
+            color: #f59e42;
+            text-shadow: 0 2px 8px #f59e4233;
+        }
+        .cell.x::after,
+        .cell.o::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.12;
+            z-index: 0;
+        }
+        .cell.x::after {
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        }
+        .cell.o::after {
+            background: linear-gradient(135deg, #f59e42 0%, #fbbf24 100%);
+        }
+        .cell.winner {
+            animation: winnerFlash 1s cubic-bezier(.68,-0.55,.27,1.55) 0s 2 alternate;
+            box-shadow: 0 0 24px 8px #22c55e55;
+            background: #bbf7d0 !important;
+        }
+        @keyframes winnerFlash {
+            0% { background: #bbf7d0; transform: scale(1);}
+            50% { background: #22c55e; transform: scale(1.15);}
+            100% { background: #bbf7d0; transform: scale(1);}
         }
         #status {
             font-size: 1.2rem;
             margin-bottom: 20px;
             color: #444;
+            min-height: 1.5em;
+            transition: color 0.3s;
+        }
+        #status.win {
+            color: #22c55e;
+            animation: statusWin 0.5s;
+        }
+        #status.draw {
+            color: #f59e42;
+            animation: statusDraw 0.5s;
+        }
+        @keyframes statusWin {
+            0% { color: #444; }
+            50% { color: #22c55e; }
+            100% { color: #22c55e; }
+        }
+        @keyframes statusDraw {
+            0% { color: #444; }
+            50% { color: #f59e42; }
+            100% { color: #f59e42; }
         }
         #reset {
             padding: 10px 24px;
@@ -54,10 +120,12 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.2s;
+            margin-bottom: 20px;
         }
         #reset:hover {
             background: #4f46e5;
+            transform: scale(1.05);
         }
         @media (max-width: 500px) {
             #game {
@@ -86,13 +154,20 @@
         let board = Array(9).fill('');
         let currentPlayer = 'X';
         let gameActive = true;
+        let winnerCells = [];
 
         function renderBoard() {
             gameContainer.innerHTML = '';
             board.forEach((cell, idx) => {
                 const cellDiv = document.createElement('div');
                 cellDiv.classList.add('cell');
-                cellDiv.textContent = cell;
+                if (cell) {
+                    cellDiv.classList.add(cell.toLowerCase(), 'filled');
+                    cellDiv.textContent = cell;
+                }
+                if (winnerCells.includes(idx)) {
+                    cellDiv.classList.add('winner');
+                }
                 cellDiv.dataset.index = idx;
                 cellDiv.addEventListener('click', handleCellClick);
                 gameContainer.appendChild(cellDiv);
@@ -104,15 +179,23 @@
             if (!gameActive || board[idx]) return;
             board[idx] = currentPlayer;
             renderBoard();
-            if (checkWinner()) {
+            const winResult = checkWinner();
+            if (winResult) {
+                winnerCells = winResult;
+                renderBoard();
                 statusDiv.textContent = `Player ${currentPlayer} wins!`;
+                statusDiv.classList.add('win');
+                statusDiv.classList.remove('draw');
                 gameActive = false;
             } else if (board.every(cell => cell)) {
                 statusDiv.textContent = "It's a draw!";
+                statusDiv.classList.add('draw');
+                statusDiv.classList.remove('win');
                 gameActive = false;
             } else {
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+                statusDiv.classList.remove('win', 'draw');
             }
         }
 
@@ -122,17 +205,22 @@
                 [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
                 [0, 4, 8], [2, 4, 6]            // diagonals
             ];
-            return winConditions.some(condition => {
+            for (const condition of winConditions) {
                 const [a, b, c] = condition;
-                return board[a] && board[a] === board[b] && board[a] === board[c];
-            });
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return condition;
+                }
+            }
+            return null;
         }
 
         function resetGame() {
             board = Array(9).fill('');
             currentPlayer = 'X';
             gameActive = true;
+            winnerCells = [];
             statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+            statusDiv.classList.remove('win', 'draw');
             renderBoard();
         }
 
