@@ -40,12 +40,38 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .mode-buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+        .mode-btn {
+            padding: 12px 28px;
+            font-size: 1rem;
+            background: linear-gradient(90deg, #00e6d3 60%, #ffb86c 100%);
+            color: #232526;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+            font-weight: 700;
+            box-shadow: 0 2px 12px #00e6d344;
+            letter-spacing: 1px;
+        }
+        .mode-btn.active, .mode-btn:focus {
+            background: linear-gradient(90deg, #ffb86c 0%, #00e6d3 100%);
+            color: #111;
+            outline: none;
+            transform: scale(1.06);
+            box-shadow: 0 6px 24px #ffb86c44;
+        }
         #game {
             display: grid;
             grid-template-columns: repeat(3, 100px);
             grid-template-rows: repeat(3, 100px);
             gap: 18px;
-            margin: 48px 0 24px 0;
+            margin: 32px 0 24px 0;
             background: var(--accent2);
             border-radius: 24px;
             box-shadow: var(--shadow);
@@ -191,6 +217,10 @@
 </head>
 <body>
     <h1>TIC TAC TOE</h1>
+    <div class="mode-buttons">
+        <button id="userMode" class="mode-btn active">Play with User</button>
+        <button id="aiMode" class="mode-btn">Play with AI</button>
+    </div>
     <div id="status">Player X's turn</div>
     <div id="game"></div>
     <button id="reset">Restart Game</button>
@@ -199,11 +229,27 @@
         const gameContainer = document.getElementById('game');
         const statusDiv = document.getElementById('status');
         const resetBtn = document.getElementById('reset');
+        const userModeBtn = document.getElementById('userMode');
+        const aiModeBtn = document.getElementById('aiMode');
 
         let board = Array(9).fill('');
         let currentPlayer = 'X';
         let gameActive = true;
         let winnerCells = [];
+        let aiMode = false;
+
+        userModeBtn.onclick = () => {
+            aiMode = false;
+            userModeBtn.classList.add('active');
+            aiModeBtn.classList.remove('active');
+            resetGame();
+        };
+        aiModeBtn.onclick = () => {
+            aiMode = true;
+            aiModeBtn.classList.add('active');
+            userModeBtn.classList.remove('active');
+            resetGame();
+        };
 
         function renderBoard() {
             gameContainer.innerHTML = '';
@@ -244,6 +290,36 @@
             } else {
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+                statusDiv.classList.remove('win', 'draw');
+                if (aiMode && gameActive && currentPlayer === 'O') {
+                    setTimeout(aiMove, 400);
+                }
+            }
+        }
+
+        function aiMove() {
+            // Simple AI: pick random empty cell
+            const emptyCells = board.map((cell, idx) => cell === '' ? idx : null).filter(idx => idx !== null);
+            if (emptyCells.length === 0) return;
+            const move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            board[move] = 'O';
+            renderBoard();
+            const winResult = checkWinner();
+            if (winResult) {
+                winnerCells = winResult;
+                renderBoard();
+                statusDiv.textContent = `Player O wins!`;
+                statusDiv.classList.add('win');
+                statusDiv.classList.remove('draw');
+                gameActive = false;
+            } else if (board.every(cell => cell)) {
+                statusDiv.textContent = "It's a draw!";
+                statusDiv.classList.add('draw');
+                statusDiv.classList.remove('win');
+                gameActive = false;
+            } else {
+                currentPlayer = 'X';
+                statusDiv.textContent = `Player X's turn`;
                 statusDiv.classList.remove('win', 'draw');
             }
         }
