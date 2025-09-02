@@ -5,9 +5,24 @@
     <title>Tic Tac Toe - Two Player</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        :root {
+            --bg: linear-gradient(135deg, #232526 0%, #414345 100%);
+            --fg: #f4f4f4;
+            --accent: #00e6d3;
+            --accent2: #232526;
+            --x-color: #00e6d3;
+            --o-color: #ffb86c;
+            --cell-bg: rgba(255,255,255,0.04);
+            --cell-hover: rgba(0,230,211,0.08);
+            --cell-winner: #fff;
+            --cell-winner-bg: #00e6d3;
+            --draw: #888;
+            --win: #00e6d3;
+            --shadow: 0 4px 32px #0008;
+        }
         body {
-            background: #f7f7f7;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -15,39 +30,53 @@
             margin: 0;
         }
         h1 {
-            margin-top: 40px;
-            color: #333;
+            margin-top: 48px;
+            color: var(--fg);
+            letter-spacing: 2px;
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-shadow: 0 4px 24px #00e6d355, 0 2px 8px #0008;
+            background: linear-gradient(90deg, #00e6d3 30%, #ffb86c 70%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         #game {
             display: grid;
-            grid-template-columns: repeat(3, 80px);
-            grid-template-rows: repeat(3, 80px);
-            gap: 10px;
-            margin: 40px 0 20px 0;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 18px;
+            margin: 48px 0 24px 0;
+            background: var(--accent2);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 24px;
         }
         .cell {
-            width: 80px;
-            height: 80px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            width: 100px;
+            height: 100px;
+            background: var(--cell-bg);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px #0003;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 3.2rem;
             cursor: pointer;
-            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            transition: background 0.18s, transform 0.18s, box-shadow 0.18s, color 0.18s;
             position: relative;
             overflow: hidden;
             user-select: none;
+            border: 2.5px solid transparent;
+            font-weight: 700;
         }
         .cell:hover {
-            background: #e0e7ff;
-            transform: scale(1.07);
-            box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+            background: var(--cell-hover);
+            transform: scale(1.06);
+            box-shadow: 0 6px 24px #00e6d344;
+            border-color: var(--accent);
         }
         .cell.filled {
-            animation: popIn 0.3s cubic-bezier(.68,-0.55,.27,1.55);
+            animation: popIn 0.32s cubic-bezier(.68,-0.55,.27,1.55);
         }
         @keyframes popIn {
             0% { transform: scale(0.5); opacity: 0; }
@@ -55,12 +84,12 @@
             100% { transform: scale(1); }
         }
         .cell.x {
-            color: #6366f1;
-            text-shadow: 0 2px 8px #6366f133;
+            color: var(--x-color);
+            text-shadow: 0 2px 12px #00e6d355;
         }
         .cell.o {
-            color: #f59e42;
-            text-shadow: 0 2px 8px #f59e4233;
+            color: var(--o-color);
+            text-shadow: 0 2px 12px #ffb86c55;
         }
         .cell.x::after,
         .cell.o::after {
@@ -68,80 +97,100 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
-            opacity: 0.12;
+            opacity: 0.09;
             z-index: 0;
         }
         .cell.x::after {
-            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            background: repeating-linear-gradient(135deg, #00e6d3 0 2px, transparent 2px 10px);
         }
         .cell.o::after {
-            background: linear-gradient(135deg, #f59e42 0%, #fbbf24 100%);
+            background: repeating-linear-gradient(135deg, #ffb86c 0 2px, transparent 2px 10px);
         }
         .cell.winner {
             animation: winnerFlash 1s cubic-bezier(.68,-0.55,.27,1.55) 0s 2 alternate;
-            box-shadow: 0 0 24px 8px #22c55e55;
-            background: #bbf7d0 !important;
+            color: var(--cell-winner-bg);
+            background: var(--cell-winner) !important;
+            border-color: var(--cell-winner-bg);
+            box-shadow: 0 0 40px 12px #00e6d388;
         }
         @keyframes winnerFlash {
-            0% { background: #bbf7d0; transform: scale(1);}
-            50% { background: #22c55e; transform: scale(1.15);}
-            100% { background: #bbf7d0; transform: scale(1);}
+            0% { background: var(--cell-winner); color: var(--cell-winner-bg);}
+            50% { background: var(--cell-winner-bg); color: var(--cell-winner);}
+            100% { background: var(--cell-winner); color: var(--cell-winner-bg);}
         }
         #status {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: #444;
+            font-size: 1.35rem;
+            margin-bottom: 28px;
+            color: var(--fg);
             min-height: 1.5em;
             transition: color 0.3s;
+            letter-spacing: 1px;
+            font-weight: 600;
+            text-shadow: 0 2px 8px #0008;
+            border-radius: 8px;
+            padding: 8px 24px;
+            background: rgba(0,230,211,0.07);
+            box-shadow: 0 2px 8px #00e6d322;
         }
         #status.win {
-            color: #22c55e;
+            color: var(--win);
             animation: statusWin 0.5s;
+            text-shadow: 0 2px 16px #00e6d3cc;
+            background: rgba(0,230,211,0.18);
         }
         #status.draw {
-            color: #f59e42;
+            color: var(--draw);
             animation: statusDraw 0.5s;
+            text-shadow: 0 2px 8px #8888;
+            background: rgba(255,184,108,0.13);
         }
         @keyframes statusWin {
-            0% { color: #444; }
-            50% { color: #22c55e; }
-            100% { color: #22c55e; }
+            0% { color: var(--fg); }
+            50% { color: var(--win); }
+            100% { color: var(--win); }
         }
         @keyframes statusDraw {
-            0% { color: #444; }
-            50% { color: #f59e42; }
-            100% { color: #f59e42; }
+            0% { color: var(--fg); }
+            50% { color: var(--draw); }
+            100% { color: var(--draw); }
         }
         #reset {
-            padding: 10px 24px;
-            font-size: 1rem;
-            background: #6366f1;
-            color: #fff;
+            padding: 14px 36px;
+            font-size: 1.15rem;
+            background: linear-gradient(90deg, #00e6d3 60%, #ffb86c 100%);
+            color: #232526;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-            margin-bottom: 20px;
+            transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 32px;
+            font-weight: 700;
+            box-shadow: 0 2px 12px #00e6d344;
+            letter-spacing: 1px;
         }
         #reset:hover {
-            background: #4f46e5;
-            transform: scale(1.05);
+            background: linear-gradient(90deg, #ffb86c 0%, #00e6d3 100%);
+            color: #111;
+            transform: scale(1.06);
+            box-shadow: 0 6px 24px #ffb86c44;
         }
-        @media (max-width: 500px) {
+        @media (max-width: 600px) {
             #game {
                 grid-template-columns: repeat(3, 60px);
                 grid-template-rows: repeat(3, 60px);
+                padding: 8px;
+                gap: 8px;
             }
             .cell {
                 width: 60px;
                 height: 60px;
-                font-size: 2rem;
+                font-size: 1.7rem;
             }
         }
     </style>
 </head>
 <body>
-    <h1>Tic Tac Toe</h1>
+    <h1>TIC TAC TOE</h1>
     <div id="status">Player X's turn</div>
     <div id="game"></div>
     <button id="reset">Restart Game</button>
